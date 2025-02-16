@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        form { margin-bottom: 20px; }
+        input { padding: 10px; margin: 5px; }
+        button { padding: 10px; cursor: pointer; }
+        .user-list { margin-top: 20px; }
+        .user-item { margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <h1>Gestión de Usuarios</h1>
+
+    <!-- Formulario para agregar usuario -->
+    <form id="userForm">
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="email" id="correo" placeholder="Correo" required>
+        <button type="submit">Registrar Usuario</button>
+    </form>
+
+    <h2>Usuarios Registrados</h2>
+    <div class="user-list" id="userList"></div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000/usuarios/";
+
+        // Función para obtener y mostrar usuarios
+        function obtenerUsuarios() {
+            fetch(API_URL)
+                .then(response => response.json())
+                .then(data => {
+                    const userList = document.getElementById("userList");
+                    userList.innerHTML = ""; // Limpiar la lista antes de agregar nuevos datos
+
+                    data.forEach(usuario => {
+                        const div = document.createElement("div");
+                        div.classList.add("user-item");
+                        div.innerHTML = `
+                            <strong>${usuario.nombre}</strong> - ${usuario.correo}
+                            <button onclick="eliminarUsuario(${usuario.id})">❌ Eliminar</button>
+                        `;
+                        userList.appendChild(div);
+                    });
+                });
+        }
+
+        // Función para registrar un usuario
+        document.getElementById("userForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            const nombre = document.getElementById("nombre").value;
+            const correo = document.getElementById("correo").value;
+
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, correo })
+            })
+            .then(response => response.json())
+            .then(() => {
+                obtenerUsuarios(); // Actualiza la lista de usuarios
+                document.getElementById("userForm").reset(); // Limpia el formulario
+            });
+        });
+
+        // Función para eliminar un usuario
+        function eliminarUsuario(usuario_id) {
+            fetch(`${API_URL}${usuario_id}`, { method: "DELETE" })
+                .then(() => obtenerUsuarios()); // Actualiza la lista de usuarios después de eliminar
+        }
+
+        // Cargar usuarios al cargar la página
+        obtenerUsuarios();
+    </script>
+
+</body>
+</html>
