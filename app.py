@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware  # ✅ Importar CORS
-from sqlalchemy.orm import Session
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
 import requests
 import os
 
@@ -10,35 +11,38 @@ import models
 import schemas
 from datetime import datetime
 
-Base.metadata.create_all(bind=engine)  # Crea la base de datos si no existe
+# ✅ Crear la base de datos si no existe
+Base.metadata.create_all(bind=engine)
 
+# ✅ Inicializar la API
 app = FastAPI()
 
+# ✅ Configurar CORS para permitir solicitudes desde el frontend en Render
+origins = [
+    "https://mywebhtmlp.onrender.com",  # Tu frontend en producción
+    "http://127.0.0.1:5500",  # Para pruebas en local con Live Server
+    "http://localhost:5500"
+]
 
-# ✅ Configurar CORS para permitir peticiones desde el frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Puedes cambiarlo a ["http://127.0.0.1:5500"] si usas Live Server
+    allow_origins=origins,  # Permite solo estos orígenes
     allow_credentials=True,
-    allow_methods=["*"],  # Permite todos los métodos: GET, POST, PUT, DELETE, OPTIONS
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Métodos permitidos
     allow_headers=["*"],  # Permite todos los headers
 )
 
-# 📌 Crear la carpeta static si no existe
+# 📌 Crear la carpeta `static` si no existe
 if not os.path.exists("static"):
     os.makedirs("static")
 
-# 📌 Montar la carpeta donde está tu HTML (cambia "static" por la carpeta real)
+# 📌 Montar la carpeta `static` para servir archivos HTML
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-
-# 📌 Ruta para servir el HTML
-from fastapi.responses import FileResponse
-
+# 📌 Ruta para servir el HTML principal
 @app.get("/")
 def serve_home():
     return FileResponse("static/index.html")  # Asegúrate de que el HTML está en "static/"
-
 
 # ✅ Dependencia para obtener la sesión de la base de datos
 def get_db():
@@ -70,7 +74,18 @@ def leer_usuario(usuario_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return usuario
 
-# ✅ Ruta para consumir una API externa
+# ✅ Ruta DELETE - Eliminar un usuario por ID
+@app.delete("/usuarios/{usuario_id}")
+def eliminar_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
+    if usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    db.delete(usuario)
+    db.commit()
+    return {"message": "Usuario eliminado correctamente"}
+
+# ✅ Ruta para consumir una API externa (chistes)
 @app.get("/random-joke/")
 def obtener_chiste():
     response = requests.get("https://official-joke-api.appspot.com/random_joke")
@@ -78,15 +93,9 @@ def obtener_chiste():
         raise HTTPException(status_code=400, detail="No se pudo obtener el chiste")
     return response.json()
 
-# ✅ Ruta principal
-@app.get("/")
-def home():
-    return {"message": "¡Servidor en funcionamiento!"}
-
 # ✅ Ruta para obtener la hora actual
 @app.get("/hora")
 def obtener_hora():
     return {"hora_actual": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 # 📌 Documentación automática en Swagger (http://127.0.0.1:8000/docs)
-

@@ -17,7 +17,6 @@
 
     <h1>Gestión de Usuarios</h1>
 
-    <!-- Formulario para agregar usuario -->
     <form id="userForm">
         <input type="text" id="nombre" placeholder="Nombre" required>
         <input type="email" id="correo" placeholder="Correo" required>
@@ -30,7 +29,7 @@
     <script>
         // 🔥 Detectar si estamos en local o en producción
         const LOCAL_API_URL = "http://127.0.0.1:8000/usuarios/";
-        const PUBLIC_API_URL = "https://mywebhtmlp.onrender.com/usuarios/";
+        const PUBLIC_API_URL = "https://tu-api.onrender.com/usuarios/"; // 🔄 Cambia por la URL de tu API en Render
 
         const API_URL = window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1") 
                         ? LOCAL_API_URL 
@@ -38,22 +37,16 @@
 
         console.log("🔍 Conectando a API:", API_URL);
 
-        // ✅ Función para obtener y mostrar usuarios
         async function obtenerUsuarios() {
             try {
-                const response = await fetch(API_URL, {
-                    method: "GET",
-                    mode: "cors",
-                    credentials: "same-origin"  // 🔥 Asegura que CORS permita las solicitudes
-                });
-
+                const response = await fetch(API_URL);
                 if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-
+                
                 const data = await response.json();
                 console.log("✅ Usuarios recibidos:", data);
 
                 const userList = document.getElementById("userList");
-                userList.innerHTML = ""; // Limpiar la lista antes de agregar nuevos datos
+                userList.innerHTML = "";
 
                 data.forEach(usuario => {
                     const div = document.createElement("div");
@@ -70,7 +63,6 @@
             }
         }
 
-        // ✅ Función para registrar un usuario
         document.getElementById("userForm").addEventListener("submit", async function(event) {
             event.preventDefault();
             
@@ -78,43 +70,30 @@
             const correo = document.getElementById("correo").value;
 
             try {
-                const response = await fetch(API_URL, {
+                await fetch(API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ nombre, correo }),
-                    mode: "cors",
-                    credentials: "same-origin"
+                    body: JSON.stringify({ nombre, correo })
                 });
 
-                if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-
-                await obtenerUsuarios(); // Actualiza la lista de usuarios
-                document.getElementById("userForm").reset(); // Limpia el formulario
+                obtenerUsuarios();
+                document.getElementById("userForm").reset();
 
             } catch (error) {
                 console.error("🚨 Error al registrar usuario:", error);
             }
         });
 
-        // ✅ Función para eliminar un usuario
         async function eliminarUsuario(usuario_id) {
             try {
-                const response = await fetch(`${API_URL}${usuario_id}`, {
-                    method: "DELETE",
-                    mode: "cors",
-                    credentials: "same-origin"
-                });
-
-                if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-
-                await obtenerUsuarios(); // Actualiza la lista de usuarios después de eliminar
+                await fetch(`${API_URL}${usuario_id}`, { method: "DELETE" });
+                obtenerUsuarios();
 
             } catch (error) {
                 console.error("🚨 Error al eliminar usuario:", error);
             }
         }
 
-        // ✅ Cargar usuarios al abrir la página
         obtenerUsuarios();
     </script>
 
