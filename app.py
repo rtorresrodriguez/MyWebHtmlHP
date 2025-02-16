@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware  # ✅ Importar CORS
 from sqlalchemy.orm import Session
+from fastapi.staticfiles import StaticFiles
 import requests
+import os
 
 from database import SessionLocal, engine, Base
 import models
@@ -12,6 +14,7 @@ Base.metadata.create_all(bind=engine)  # Crea la base de datos si no existe
 
 app = FastAPI()
 
+
 # ✅ Configurar CORS para permitir peticiones desde el frontend
 app.add_middleware(
     CORSMiddleware,
@@ -20,6 +23,22 @@ app.add_middleware(
     allow_methods=["*"],  # Permite todos los métodos: GET, POST, PUT, DELETE, OPTIONS
     allow_headers=["*"],  # Permite todos los headers
 )
+
+# 📌 Crear la carpeta static si no existe
+if not os.path.exists("static"):
+    os.makedirs("static")
+
+# 📌 Montar la carpeta donde está tu HTML (cambia "static" por la carpeta real)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+# 📌 Ruta para servir el HTML
+from fastapi.responses import FileResponse
+
+@app.get("/")
+def serve_home():
+    return FileResponse("static/index.html")  # Asegúrate de que el HTML está en "static/"
+
 
 # ✅ Dependencia para obtener la sesión de la base de datos
 def get_db():
