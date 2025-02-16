@@ -28,7 +28,7 @@
     <div class="user-list" id="userList"></div>
 
     <script>
-        // 🔹 Detectar si estamos en local o en producción (Render)
+        // 🔥 Detectar si estamos en local o en producción
         const LOCAL_API_URL = "http://127.0.0.1:8000/usuarios/";
         const PUBLIC_API_URL = "https://mywebhtmlp.onrender.com/usuarios/";
 
@@ -36,16 +36,21 @@
                         ? LOCAL_API_URL 
                         : PUBLIC_API_URL;
 
-        console.log("Conectando a API:", API_URL); // 🔍 Depuración en consola
+        console.log("🔍 Conectando a API:", API_URL);
 
-        // ✅ Función para obtener y mostrar usuarios (usando async/await para evitar problemas con fetch)
+        // ✅ Función para obtener y mostrar usuarios
         async function obtenerUsuarios() {
             try {
-                const response = await fetch(API_URL, { mode: "cors", credentials: "same-origin" });
-                if (!response.ok) throw new Error(`Error: ${response.status}`);
-                
+                const response = await fetch(API_URL, {
+                    method: "GET",
+                    mode: "cors",
+                    credentials: "same-origin"  // 🔥 Asegura que CORS permita las solicitudes
+                });
+
+                if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+
                 const data = await response.json();
-                console.log("Usuarios recibidos:", data); // 🔍 Verificación en consola
+                console.log("✅ Usuarios recibidos:", data);
 
                 const userList = document.getElementById("userList");
                 userList.innerHTML = ""; // Limpiar la lista antes de agregar nuevos datos
@@ -61,11 +66,11 @@
                 });
 
             } catch (error) {
-                console.error("Error al obtener usuarios:", error);
+                console.error("🚨 Error al obtener usuarios:", error);
             }
         }
 
-        // ✅ Función para registrar un usuario (mejor manejo de errores)
+        // ✅ Función para registrar un usuario
         document.getElementById("userForm").addEventListener("submit", async function(event) {
             event.preventDefault();
             
@@ -81,17 +86,17 @@
                     credentials: "same-origin"
                 });
 
-                if (!response.ok) throw new Error(`Error: ${response.status}`);
+                if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
 
                 await obtenerUsuarios(); // Actualiza la lista de usuarios
                 document.getElementById("userForm").reset(); // Limpia el formulario
 
             } catch (error) {
-                console.error("Error al registrar usuario:", error);
+                console.error("🚨 Error al registrar usuario:", error);
             }
         });
 
-        // ✅ Función para eliminar un usuario (ahora con mejor control de errores)
+        // ✅ Función para eliminar un usuario
         async function eliminarUsuario(usuario_id) {
             try {
                 const response = await fetch(`${API_URL}${usuario_id}`, {
@@ -100,16 +105,16 @@
                     credentials: "same-origin"
                 });
 
-                if (!response.ok) throw new Error(`Error: ${response.status}`);
+                if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
 
                 await obtenerUsuarios(); // Actualiza la lista de usuarios después de eliminar
 
             } catch (error) {
-                console.error("Error al eliminar usuario:", error);
+                console.error("🚨 Error al eliminar usuario:", error);
             }
         }
 
-        // ✅ Cargar usuarios al cargar la página
+        // ✅ Cargar usuarios al abrir la página
         obtenerUsuarios();
     </script>
 
