@@ -19,29 +19,25 @@ app = FastAPI()
 
 # ✅ Configurar CORS para permitir solicitudes desde el frontend en Render
 origins = [
-    "https://mywebhtmlp.onrender.com",
-    "http://127.0.0.1:5500",
+    "https://mywebhtmlp.onrender.com",  # Tu frontend en producción
+    "http://127.0.0.1:5500",  # Para pruebas en local con Live Server
     "http://localhost:5500"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,  # Permite solo estos orígenes
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Métodos permitidos
+    allow_headers=["*"],  # Permite todos los headers
 )
 
-# 📌 Servir archivos estáticos
+# 📌 Crear la carpeta `static` si no existe
 if not os.path.exists("static"):
     os.makedirs("static")
 
+# 📌 Montar la carpeta `static` para servir archivos HTML
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# ✅ Ruta para probar si la API está funcionando
-@app.get("/")
-def home():
-    return {"message": "¡Servidor en funcionamiento!"}
 
 # 📌 Ruta para servir el HTML principal
 @app.get("/")
