@@ -28,7 +28,12 @@
     <div class="user-list" id="userList"></div>
 
     <script>
-        const API_URL = "http://127.0.0.1:8000/usuarios/";
+        // Detectar si la app está corriendo en local o en Render
+        const LOCAL_API_URL = "http://127.0.0.1:8000/usuarios/";
+        const RENDER_API_URL = "https://mywebhtmlp.onrender.com/usuarios/";
+        const API_URL = window.location.hostname.includes("127.0.0.1") ? LOCAL_API_URL : RENDER_API_URL;
+
+        console.log("Usando API:", API_URL);  // Para verificar en consola qué API se usa
 
         // Función para obtener y mostrar usuarios
         function obtenerUsuarios() {
@@ -47,7 +52,8 @@
                         `;
                         userList.appendChild(div);
                     });
-                });
+                })
+                .catch(error => console.error("Error al obtener los datos:", error));
         }
 
         // Función para registrar un usuario
@@ -66,17 +72,28 @@
             .then(() => {
                 obtenerUsuarios(); // Actualiza la lista de usuarios
                 document.getElementById("userForm").reset(); // Limpia el formulario
-            });
+            })
+            .catch(error => console.error("Error al registrar usuario:", error));
         });
 
         // Función para eliminar un usuario
         function eliminarUsuario(usuario_id) {
             fetch(`${API_URL}${usuario_id}`, { method: "DELETE" })
-                .then(() => obtenerUsuarios()); // Actualiza la lista de usuarios después de eliminar
+                .then(() => obtenerUsuarios()) // Actualiza la lista de usuarios después de eliminar
+                .catch(error => console.error("Error al eliminar usuario:", error));
         }
 
         // Cargar usuarios al cargar la página
         obtenerUsuarios();
+
+        // 🌐 Extra: Verificar conexión con la API desde consola
+        fetch(RENDER_API_URL)
+            .then(response => response.json())
+            .then(data => {
+                console.log("Datos desde Render:", data);  // Mostrar datos en consola
+            })
+            .catch(error => console.error("Error conectando a Render:", error));
+
     </script>
 
 </body>
