@@ -36,66 +36,80 @@
                         ? LOCAL_API_URL 
                         : PUBLIC_API_URL;
 
-        console.log("Conectando a:", API_URL); // Para verificar en consola
+        console.log("Conectando a API:", API_URL); // 🔍 Depuración en consola
 
-        // Función para obtener y mostrar usuarios
-        function obtenerUsuarios() {
-            fetch(API_URL)
-                .then(response => {
-                    if (!response.ok) throw new Error(`Error: ${response.status}`);
-                    return response.json();
-                })
-                .then(data => {
-                    const userList = document.getElementById("userList");
-                    userList.innerHTML = ""; // Limpiar la lista antes de agregar nuevos datos
+        // ✅ Función para obtener y mostrar usuarios (usando async/await para evitar problemas con fetch)
+        async function obtenerUsuarios() {
+            try {
+                const response = await fetch(API_URL, { mode: "cors", credentials: "same-origin" });
+                if (!response.ok) throw new Error(`Error: ${response.status}`);
+                
+                const data = await response.json();
+                console.log("Usuarios recibidos:", data); // 🔍 Verificación en consola
 
-                    data.forEach(usuario => {
-                        const div = document.createElement("div");
-                        div.classList.add("user-item");
-                        div.innerHTML = `
-                            <strong>${usuario.nombre}</strong> - ${usuario.correo}
-                            <button onclick="eliminarUsuario(${usuario.id})">❌ Eliminar</button>
-                        `;
-                        userList.appendChild(div);
-                    });
-                })
-                .catch(error => console.error("Error al obtener usuarios:", error));
+                const userList = document.getElementById("userList");
+                userList.innerHTML = ""; // Limpiar la lista antes de agregar nuevos datos
+
+                data.forEach(usuario => {
+                    const div = document.createElement("div");
+                    div.classList.add("user-item");
+                    div.innerHTML = `
+                        <strong>${usuario.nombre}</strong> - ${usuario.correo}
+                        <button onclick="eliminarUsuario(${usuario.id})">❌ Eliminar</button>
+                    `;
+                    userList.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error("Error al obtener usuarios:", error);
+            }
         }
 
-        // Función para registrar un usuario
-        document.getElementById("userForm").addEventListener("submit", function(event) {
+        // ✅ Función para registrar un usuario (mejor manejo de errores)
+        document.getElementById("userForm").addEventListener("submit", async function(event) {
             event.preventDefault();
             
             const nombre = document.getElementById("nombre").value;
             const correo = document.getElementById("correo").value;
 
-            fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, correo })
-            })
-            .then(response => {
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre, correo }),
+                    mode: "cors",
+                    credentials: "same-origin"
+                });
+
                 if (!response.ok) throw new Error(`Error: ${response.status}`);
-                return response.json();
-            })
-            .then(() => {
-                obtenerUsuarios(); // Actualiza la lista de usuarios
+
+                await obtenerUsuarios(); // Actualiza la lista de usuarios
                 document.getElementById("userForm").reset(); // Limpia el formulario
-            })
-            .catch(error => console.error("Error al registrar usuario:", error));
+
+            } catch (error) {
+                console.error("Error al registrar usuario:", error);
+            }
         });
 
-        // Función para eliminar un usuario
-        function eliminarUsuario(usuario_id) {
-            fetch(`${API_URL}${usuario_id}`, { method: "DELETE" })
-                .then(response => {
-                    if (!response.ok) throw new Error(`Error: ${response.status}`);
-                    obtenerUsuarios();
-                })
-                .catch(error => console.error("Error al eliminar usuario:", error));
+        // ✅ Función para eliminar un usuario (ahora con mejor control de errores)
+        async function eliminarUsuario(usuario_id) {
+            try {
+                const response = await fetch(`${API_URL}${usuario_id}`, {
+                    method: "DELETE",
+                    mode: "cors",
+                    credentials: "same-origin"
+                });
+
+                if (!response.ok) throw new Error(`Error: ${response.status}`);
+
+                await obtenerUsuarios(); // Actualiza la lista de usuarios después de eliminar
+
+            } catch (error) {
+                console.error("Error al eliminar usuario:", error);
+            }
         }
 
-        // Cargar usuarios al cargar la página
+        // ✅ Cargar usuarios al cargar la página
         obtenerUsuarios();
     </script>
 
