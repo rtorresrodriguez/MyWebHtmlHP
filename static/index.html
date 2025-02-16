@@ -28,12 +28,23 @@
     <div class="user-list" id="userList"></div>
 
     <script>
-        const API_URL = "http://127.0.0.1:8000/usuarios/";
+        // 🔹 Detectar si estamos en local o en producción (Render)
+        const LOCAL_API_URL = "http://127.0.0.1:8000/usuarios/";
+        const PUBLIC_API_URL = "https://mywebhtmlp.onrender.com/usuarios/";
+
+        const API_URL = window.location.hostname.includes("localhost") || window.location.hostname.includes("127.0.0.1") 
+                        ? LOCAL_API_URL 
+                        : PUBLIC_API_URL;
+
+        console.log("Conectando a:", API_URL); // Para verificar en consola
 
         // Función para obtener y mostrar usuarios
         function obtenerUsuarios() {
             fetch(API_URL)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error(`Error: ${response.status}`);
+                    return response.json();
+                })
                 .then(data => {
                     const userList = document.getElementById("userList");
                     userList.innerHTML = ""; // Limpiar la lista antes de agregar nuevos datos
@@ -47,7 +58,8 @@
                         `;
                         userList.appendChild(div);
                     });
-                });
+                })
+                .catch(error => console.error("Error al obtener usuarios:", error));
         }
 
         // Función para registrar un usuario
@@ -62,17 +74,25 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ nombre, correo })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`Error: ${response.status}`);
+                return response.json();
+            })
             .then(() => {
                 obtenerUsuarios(); // Actualiza la lista de usuarios
                 document.getElementById("userForm").reset(); // Limpia el formulario
-            });
+            })
+            .catch(error => console.error("Error al registrar usuario:", error));
         });
 
         // Función para eliminar un usuario
         function eliminarUsuario(usuario_id) {
             fetch(`${API_URL}${usuario_id}`, { method: "DELETE" })
-                .then(() => obtenerUsuarios()); // Actualiza la lista de usuarios después de eliminar
+                .then(response => {
+                    if (!response.ok) throw new Error(`Error: ${response.status}`);
+                    obtenerUsuarios();
+                })
+                .catch(error => console.error("Error al eliminar usuario:", error));
         }
 
         // Cargar usuarios al cargar la página
